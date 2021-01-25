@@ -2033,6 +2033,9 @@ skybellpy==0.6.3
 # homeassistant.components.slack
 slackclient==2.5.0
 
+# homeassistant.components.sleepiq_custom
+sleepi==0.0.8
+
 # homeassistant.components.sleepiq
 sleepyq==0.8.1
 

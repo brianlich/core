@@ -181,6 +181,7 @@ FLOWS = [
     "shelly",
     "shopping_list",
     "simplisafe",
+    "sleepiq_custom",
     "smappee",
     "smart_meter_texas",
     "smarthab",
