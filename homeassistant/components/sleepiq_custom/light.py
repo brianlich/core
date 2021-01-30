@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant import config_entries
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import LightEntity, SUPPORT_BRIGHTNESS
 from homeassistant.const import ATTR_ATTRIBUTION
 
 from . import SleepIQDataUpdateCoordinator, SleepIQDevice
@@ -43,11 +43,16 @@ async def async_setup_entry(
 class SleepIQNightLight(LightEntity, SleepIQDevice):
     """ Representation of a light """
 
-    def __init__(self, coordinator: SleepIQDataUpdateCoordinator, outletID: int):
+    def __init__(
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        outletID: int,
+    ):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._outletid = outletID
         self._name = None
+        self._brightness = self._coordinator.data.foundation.fsLeftUnderbedLightPWM
         self._unique_id = (
             DOMAIN + "_" + self._coordinator.data.bedId + "_light_" + str(outletID)
         )
@@ -103,6 +108,17 @@ class SleepIQNightLight(LightEntity, SleepIQDevice):
     def is_on(self):
         """Return True if device is on."""
         return self._is_on
+
+    @property
+    def brightness(self):
+        """Return True if device is on."""
+        return self._brightness
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        flags = SUPPORT_BRIGHTNESS
+        return flags
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""

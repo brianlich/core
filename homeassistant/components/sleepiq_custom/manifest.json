@@ -2,10 +2,9 @@
   "domain": "sleepiq_custom",
   "name": "SleepIQ Custom",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sleepiq_custom",
+  "documentation": "https://github.com/brianlich/sleepiq-custom",
   "requirements": [
-    "sleepi==0.0.11",
-    "sleepyq==0.8.1"
+    "sleepi==0.0.18"
   ],
   "ssdp": [],
   "zeroconf": [],

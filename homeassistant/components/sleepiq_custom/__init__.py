@@ -27,7 +27,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["light", "sensor", "binary_sensor"]
+PLATFORMS = ["light", "sensor", "binary_sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         side = call.data.get("side", "")
         number_to_set = call.data.get("sleep_number", "")
 
-        set_favorite_sleep_number(side, number_to_set)
+        await set_favorite_sleep_number(side, number_to_set)
 
     async def set_favorite_sleep_number(side, number_to_set):
         """ Set the favorite sleep number for a specific side"""
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             _LOGGER.error("You must specify a side when setting the sleep number")
         else:
             _LOGGER.error("This is were we set the favorite sleep number")
-            # await coordinator.sleepiq.get_favorite_sleepnumber(side, number_to_set)
+            await coordinator.sleepiq.set_favorite_sleepnumber(side, number_to_set)
 
     async def set_sleep_number(side, number_to_set):
         """ Set the sleep number for a specific side"""
@@ -81,12 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         if 0 < int(number_to_set) <= 100 and int(number_to_set) % 5 == 0:
             _LOGGER.error("This is were we set the sleep number")
-            # await coordinator.sleepiq.get_favorite_sleepnumber(side, number_to_set)
+            # await coordinator.sleepiq.set_sleepnumber(side, number_to_set)
         else:
             message = f"Invalid sleep number: {number_to_set}. The new sleep number must be a multiple of 5 between 5 and 100"
             _LOGGER.error(message)
 
-    hass.services.register(DOMAIN, SERVICE_SET_SLEEP_NUMBER, handle_set_sleep_number)
+    # hass.services.register(DOMAIN, SERVICE_SET_SLEEP_NUMBER, handle_set_sleep_number)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_FAVORITE, handle_set_favorite_sleep_number
