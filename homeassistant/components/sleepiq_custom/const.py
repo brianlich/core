@@ -15,5 +15,3 @@ RIGHT = "right"
 SCAN_INTERVAL = timedelta(seconds=30)
 SIDES = [LEFT, RIGHT]
 SLEEP_NUMBER = "Sleep Number"
-SERVICE_SET_SLEEP_NUMBER = "set_sleep_number"
-SERVICE_SET_FAVORITE = "set_favorite_sleep_number"

@@ -36,6 +36,11 @@ class IsInBedBinarySensor(SleepIQDevice, BinarySensorEntity):
         self._unique_id = (
             DOMAIN + "_" + self._coordinator.data.bedId + "_" + self._side + "is_in_bed"
         )
+        self._is_on = (
+            self._coordinator.data.left_side.isInBed
+            if self._side.lower() == "left"
+            else self._coordinator.data.right_side.isInBed
+        )
 
     @property
     def name(self):
@@ -57,10 +62,11 @@ class IsInBedBinarySensor(SleepIQDevice, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        if self._side is LEFT:
-            return self._coordinator.data.left_side.isInBed
-        else:
-            return self._coordinator.data.right_side.isInBed
+        return self._is_on
+        # if self._side is LEFT:
+        #     return self._coordinator.data.left_side.isInBed
+        # else:
+        #     return self._coordinator.data.right_side.isInBed
 
     @property
     def device_class(self):

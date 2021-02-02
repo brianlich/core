@@ -81,11 +81,6 @@ class SleepIQNightLight(LightEntity, SleepIQDevice):
         """Return the name of the sensor."""
         return self._name
 
-    # @property
-    # def state(self):
-    #     """Return the name of the sensor."""
-    #     return self._state
-
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -123,19 +118,13 @@ class SleepIQNightLight(LightEntity, SleepIQDevice):
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
         await self._coordinator.sleepiq.turn_on_light(self._outletid)
-        # self._coordinator.data.light3.setting = 1
         await self._coordinator.async_request_refresh()
         self._is_on = True
-        # self._state = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
         await self._coordinator.sleepiq.turn_off_light(self._outletid)
-        # self._coordinator.data.light3.setting = 0
         await self._coordinator.async_request_refresh()
-        # self._state = False
         self._is_on = False
-
-    # async def async_update(self):
-    #     """Call when forcing a refresh of the device."""
-    #     self._is_on = self._coordinator.sleepiq.get_light_status(self._outletid)
+        self.async_write_ha_state()

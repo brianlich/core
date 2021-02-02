@@ -1,6 +1,7 @@
 """The SleepIQ Custom integration."""
 import asyncio
 import logging
+import voluptuous as vol
 from typing import Any, Dict
 
 from sleepi.models import Bed
@@ -10,11 +11,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+SERVICE_SET_SLEEP_NUMBER = "set_sleep_number"
+SERVICE_SET_FAVORITE = "set_favorite_sleep_number"
+SERVICE_SET_FAVORITE_ATTR_SIDE = "side"
+SERVICE_SET_FAVORITE_ATTR_NUMBER = "number"
+SERVICE_SET_FOOT_WARMING = "set_foot_warming"
 
 from .const import (
     DEVICE_MANUFACTURER,
@@ -22,9 +30,22 @@ from .const import (
     DEVICE_SW_VERSION,
     DOMAIN,
     SCAN_INTERVAL,
-    SERVICE_SET_FAVORITE,
-    SERVICE_SET_SLEEP_NUMBER,
 )
+
+SERVICE_SET_NUMBER_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): str,
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_NUMBER): int,
+    }
+)
+
+SERVICE_SET_FOOT_WARMING_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): cv.string,
+        vol.Required("temperature"): cv.string,
+    }
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light", "sensor", "binary_sensor", "switch"]
@@ -52,6 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
+    async def handle_foot_warming(call):
+        """ Handle the foot warmer """
+        side = call.data.get("side")
+        temperature = call.data.get("temperature")
+        await coordinator.sleepiq.turn_on_footwarming(side, temperature)
+
     async def handle_set_sleep_number(call):
         """ Handle the service call to set the Sleep Number for specific side """
         side = call.data.get("side", "")
@@ -62,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def handle_set_favorite_sleep_number(call):
         """ Handle the service call to set the Sleep Number favorite for a specific side """
         side = call.data.get("side", "")
-        number_to_set = call.data.get("sleep_number", "")
+        number_to_set = call.data.get("number", "")
 
         await set_favorite_sleep_number(side, number_to_set)
 
@@ -86,11 +113,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             message = f"Invalid sleep number: {number_to_set}. The new sleep number must be a multiple of 5 between 5 and 100"
             _LOGGER.error(message)
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_FOOT_WARMING,
+        handle_foot_warming,
+        schema=SERVICE_SET_FOOT_WARMING_SCHEMA,
+    )
+
     # hass.services.register(DOMAIN, SERVICE_SET_SLEEP_NUMBER, handle_set_sleep_number)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_FAVORITE, handle_set_favorite_sleep_number
-    )
+    # hass.services.register(
+    #     DOMAIN,
+    #     SERVICE_SET_FAVORITE,
+    #     handle_set_favorite_sleep_number,
+    #     schema=SERVICE_SET_NUMBER_SCHEMA,
+    # )
 
     return True
 
@@ -132,16 +169,17 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
+    # def update_listeners(self) -> None:
+    #     """Call update on all listeners."""
+    #     for update_callback in self._listeners:
+    #         update_callback()
 
     async def _async_update_data(self) -> Bed:
         """Fetch data from API endpoint."""
         try:
             _LOGGER.debug("Fetching data")
-            await self.sleepiq.login()
+            if self.sleepiq._key is None:
+                await self.sleepiq.login()
             return await self.sleepiq.fetch_homeassistant_data()
         except Exception as e:
             message = "SleepIQ failed to login, double check your username and password"

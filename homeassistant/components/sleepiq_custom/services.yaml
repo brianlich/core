@@ -1,19 +1,9 @@
-set_sleep_number:
-  description: Change the sleep bumber of a bed for a specific side.
+set_foot_warming:
+  description: Set the foot warmer to a specific setting for a side.
   fields:
-    sleep_number:
-      description: Enter the new sleep number as a multiple of 5 between 5 and 100.
-      example: 45
     side:
       description: The side to change.
       example: "right"
-
-set_favorite_sleep_number:
-  description: Changes a bed's Sleep Number to a preset.
-  fields:
-    side:
-      description: The side to change. If unspecified, both sides will change.
-      example: "right"
-    preset:
-    description: Choose one of the following presets: favorite, read, watch_tv, flat, zero_g, snore
-    example: "favorite"
+    temperature:
+      description: Choose one of the following temperatures: off, low, medium, high
+      example: "high"

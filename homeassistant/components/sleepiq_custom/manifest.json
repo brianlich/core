@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://github.com/brianlich/sleepiq-custom",
   "requirements": [
-    "sleepi==0.0.18"
+    "sleepi==0.0.20"
   ],
   "ssdp": [],
   "zeroconf": [],

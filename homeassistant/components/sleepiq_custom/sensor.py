@@ -2,6 +2,8 @@
 from homeassistant import config_entries
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import entity_platform
+import voluptuous as vol
 
 from . import SleepIQDataUpdateCoordinator, SleepIQDevice
 from .const import ATTRIBUTION_TEXT, DOMAIN, ICON, LEFT, RIGHT
@@ -77,7 +79,9 @@ class SleeperSensor(SleepIQDevice, Entity):
                 "foot_warming": "off"
                 if self._coordinator.data.foot_warming.footWarmingStatusLeft == 0
                 else "on",
-                "side": self._coordinator.data.left_side.sleeper.side,
+                "side": "left"
+                if self._coordinator.data.left_side.sleeper.side == 0
+                else "right",
                 "sleepGoal": self._coordinator.data.left_side.sleeper.sleepGoal,
                 "birthMonth": self._coordinator.data.left_side.sleeper.birthMonth,
                 "birthYear": self._coordinator.data.left_side.sleeper.birthYear,
@@ -99,7 +103,9 @@ class SleeperSensor(SleepIQDevice, Entity):
                 "foot_warming": "off"
                 if self._coordinator.data.foot_warming.footWarmingStatusRight == 0
                 else "on",
-                "side": self._coordinator.data.right_side.sleeper.side,
+                "side": "left"
+                if self._coordinator.data.left_side.sleeper.side == 0
+                else "right",
                 "sleepGoal": self._coordinator.data.right_side.sleeper.sleepGoal,
                 "birthMonth": self._coordinator.data.right_side.sleeper.birthMonth,
                 "birthYear": self._coordinator.data.right_side.sleeper.birthYear,
