@@ -1,4 +1,4 @@
-"""Support for Tesla binary sensor."""
+"""Support for SleepIQ custom binary sensors."""
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
@@ -44,7 +44,7 @@ class IsInBedBinarySensor(SleepIQDevice, BinarySensorEntity):
 
     @property
     def name(self):
-        """ Name """
+        """ Return the name of the sensor """
         if self._side is LEFT:
             if self._coordinator.data.left_side.sleeper.firstName is None:
                 return self._side + " side " + IS_IN_BED
@@ -63,10 +63,6 @@ class IsInBedBinarySensor(SleepIQDevice, BinarySensorEntity):
     def is_on(self):
         """Return the status of the sensor."""
         return self._is_on
-        # if self._side is LEFT:
-        #     return self._coordinator.data.left_side.isInBed
-        # else:
-        #     return self._coordinator.data.right_side.isInBed
 
     @property
     def device_class(self):
@@ -85,58 +81,14 @@ class IsInBedBinarySensor(SleepIQDevice, BinarySensorEntity):
             thisdict = {
                 "bedId": self._coordinator.data.left_side.sleeper.bedId,
                 "firstName": self._coordinator.data.left_side.sleeper.firstName,
-                "active": self._coordinator.data.left_side.sleeper.active,
-                "emailValidated": self._coordinator.data.left_side.sleeper.emailValidated,
-                "gender": self._coordinator.data.left_side.sleeper.gender,
-                "isChild": self._coordinator.data.left_side.sleeper.isChild,
-                "birthYear": self._coordinator.data.left_side.sleeper.birthYear,
-                "zipCode": self._coordinator.data.left_side.sleeper.zipCode,
-                "timezone": self._coordinator.data.left_side.sleeper.timezone,
-                "privacyPolicyVersion": self._coordinator.data.left_side.sleeper.privacyPolicyVersion,
-                "duration": self._coordinator.data.left_side.sleeper.duration,
-                "weight": self._coordinator.data.left_side.sleeper.weight,
                 "sleeperId": self._coordinator.data.left_side.sleeper.sleeperId,
-                "firstSessionRecorded": self._coordinator.data.left_side.sleeper.firstSessionRecorded,
-                "height": self._coordinator.data.left_side.sleeper.height,
-                "licenseVersion": self._coordinator.data.left_side.sleeper.licenseVersion,
-                "username": self._coordinator.data.left_side.sleeper.username,
-                "birthMonth": self._coordinator.data.left_side.sleeper.birthMonth,
-                "sleepGoal": self._coordinator.data.left_side.sleeper.sleepGoal,
-                "accountId": self._coordinator.data.left_side.sleeper.accountId,
-                "isAccountOwner": self._coordinator.data.left_side.sleeper.isAccountOwner,
-                "email": self._coordinator.data.left_side.sleeper.email,
-                "lastLogin": self._coordinator.data.left_side.sleeper.lastLogin,
-                "side": self._coordinator.data.left_side.sleeper.side,
-                "favorite": self._coordinator.data.left_side.sleeper.favorite,
                 ATTR_ATTRIBUTION: ATTRIBUTION_TEXT,
             }
         else:
             thisdict = {
                 "bedId": self._coordinator.data.right_side.sleeper.bedId,
                 "firstName": self._coordinator.data.right_side.sleeper.firstName,
-                "active": self._coordinator.data.right_side.sleeper.active,
-                "emailValidated": self._coordinator.data.right_side.sleeper.emailValidated,
-                "gender": self._coordinator.data.right_side.sleeper.gender,
-                "isChild": self._coordinator.data.right_side.sleeper.isChild,
-                "birthYear": self._coordinator.data.right_side.sleeper.birthYear,
-                "zipCode": self._coordinator.data.right_side.sleeper.zipCode,
-                "timezone": self._coordinator.data.right_side.sleeper.timezone,
-                "privacyPolicyVersion": self._coordinator.data.right_side.sleeper.privacyPolicyVersion,
-                "duration": self._coordinator.data.right_side.sleeper.duration,
-                "weight": self._coordinator.data.right_side.sleeper.weight,
                 "sleeperId": self._coordinator.data.right_side.sleeper.sleeperId,
-                "firstSessionRecorded": self._coordinator.data.right_side.sleeper.firstSessionRecorded,
-                "height": self._coordinator.data.right_side.sleeper.height,
-                "licenseVersion": self._coordinator.data.right_side.sleeper.licenseVersion,
-                "username": self._coordinator.data.right_side.sleeper.username,
-                "birthMonth": self._coordinator.data.right_side.sleeper.birthMonth,
-                "sleepGoal": self._coordinator.data.right_side.sleeper.sleepGoal,
-                "accountId": self._coordinator.data.right_side.sleeper.accountId,
-                "isAccountOwner": self._coordinator.data.right_side.sleeper.isAccountOwner,
-                "email": self._coordinator.data.right_side.sleeper.email,
-                "lastLogin": self._coordinator.data.right_side.sleeper.lastLogin,
-                "side": self._coordinator.data.right_side.sleeper.side,
-                "favorite": self._coordinator.data.right_side.sleeper.favorite,
                 ATTR_ATTRIBUTION: ATTRIBUTION_TEXT,
             }
 
@@ -151,6 +103,7 @@ class SleepNumberConnectivityBinarySensor(SleepIQDevice, BinarySensorEntity):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._name = "Sleep Number online sensor"
+        self._is_on = self._coordinator.data.status
         self._unique_id = (
             DOMAIN + "_" + self._coordinator.data.bedId + "_connectivity_binary_sensor"
         )
@@ -168,7 +121,7 @@ class SleepNumberConnectivityBinarySensor(SleepIQDevice, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        return self._coordinator.data.status
+        return self._is_on
 
     @property
     def device_class(self):
@@ -179,8 +132,13 @@ class SleepNumberConnectivityBinarySensor(SleepIQDevice, BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return {
+            "name": self._coordinator.data.name,
             "registrationDate": self._coordinator.data.registrationDate,
             "bedId": self._coordinator.data.bedId,
             "macAddress": self._coordinator.data.macAddress,
+            "serial": self._coordinator.data.serial,
+            "status": self._coordinator.data.status,
+            "sku": self._coordinator.data.sku,
+            "version": self._coordinator.data.version,
             ATTR_ATTRIBUTION: ATTRIBUTION_TEXT,
         }

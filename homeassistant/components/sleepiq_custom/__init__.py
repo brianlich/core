@@ -21,8 +21,11 @@ from homeassistant.helpers.update_coordinator import (
 SERVICE_SET_SLEEP_NUMBER = "set_sleep_number"
 SERVICE_SET_FAVORITE = "set_favorite_sleep_number"
 SERVICE_SET_FAVORITE_ATTR_SIDE = "side"
-SERVICE_SET_FAVORITE_ATTR_NUMBER = "number"
+SERVICE_SET_FAVORITE_ATTR_NUMBER = "sleep_number"
 SERVICE_SET_FOOT_WARMING = "set_foot_warming"
+SERVICE_SET_FOOT_WARMING_ATTR_TEMP = "temperature"
+SERVICE_SET_LIGHT_BRIGHTNESS = "set_light_brightness"
+SERVICE_SET_LIGHT_BRIGHTNESS_ATTR_BRIGHTNESS = "brightness"
 
 from .const import (
     DEVICE_MANUFACTURER,
@@ -34,21 +37,34 @@ from .const import (
 
 SERVICE_SET_NUMBER_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): str,
-        vol.Required(SERVICE_SET_FAVORITE_ATTR_NUMBER): int,
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): cv.string,
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_NUMBER): cv.positive_int,
     }
 )
 
 SERVICE_SET_FOOT_WARMING_SCHEMA = vol.Schema(
     {
         vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): cv.string,
-        vol.Required("temperature"): cv.string,
+        vol.Required(SERVICE_SET_FOOT_WARMING_ATTR_TEMP): cv.string,
+    }
+)
+
+SERVICE_SET_NUMBER_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_SIDE): cv.string,
+        vol.Required(SERVICE_SET_FAVORITE_ATTR_NUMBER): cv.positive_int,
+    }
+)
+
+SERVICE_SET_BRIGHTNESS_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_SET_LIGHT_BRIGHTNESS_ATTR_BRIGHTNESS): cv.string,
     }
 )
 
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["light", "sensor", "binary_sensor", "switch"]
+PLATFORMS = ["sensor", "binary_sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -73,45 +89,56 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
+    async def handle_set_light_brightness(call):
+        """ Handle the foot warmer service call """
+        brightness: str = call.data.get("brightness")
+        _LOGGER.debug(f"Setting the brightness of the underbed light to {brightness}")
+        return await coordinator.sleepiq.set_light_brightness(brightness)
+
     async def handle_foot_warming(call):
-        """ Handle the foot warmer """
+        """ Handle the foot warmer service call """
         side = call.data.get("side")
         temperature = call.data.get("temperature")
-        await coordinator.sleepiq.turn_on_footwarming(side, temperature)
+
+        if temperature.lower() == "off":
+            _LOGGER.debug(f"Turning off the {side} foot warmer")
+            return await coordinator.sleepiq.turn_off_foot_warming(side)
+        else:
+            _LOGGER.debug(
+                f"Turning on the {side} foot warmer and setting it to {temperature}"
+            )
+            return await coordinator.sleepiq.turn_on_foot_warming(side, temperature)
 
     async def handle_set_sleep_number(call):
         """ Handle the service call to set the Sleep Number for specific side """
         side = call.data.get("side", "")
         number_to_set = call.data.get("sleep_number", "")
 
-        set_sleep_number(side, number_to_set)
+        if 0 < int(number_to_set) <= 100 and int(number_to_set) % 5 == 0:
+            _LOGGER.error(f"Setting the {side} side Sleep Number to {number_to_set}.")
+            await coordinator.sleepiq.set_sleepnumber(side, number_to_set)
+        else:
+            _LOGGER.error(
+                f"Invalid sleep number: {number_to_set}. The new sleep number must be a multiple of 5 between 5 and 100"
+            )
 
     async def handle_set_favorite_sleep_number(call):
         """ Handle the service call to set the Sleep Number favorite for a specific side """
         side = call.data.get("side", "")
-        number_to_set = call.data.get("number", "")
+        number_to_set = call.data.get("sleep_number", "")
 
-        await set_favorite_sleep_number(side, number_to_set)
-
-    async def set_favorite_sleep_number(side, number_to_set):
-        """ Set the favorite sleep number for a specific side"""
-        if side is None:
-            _LOGGER.error("You must specify a side when setting the sleep number")
-        else:
-            _LOGGER.error("This is were we set the favorite sleep number")
-            await coordinator.sleepiq.set_favorite_sleepnumber(side, number_to_set)
-
-    async def set_sleep_number(side, number_to_set):
-        """ Set the sleep number for a specific side"""
         if side is None:
             _LOGGER.error("You must specify a side when setting the sleep number")
 
         if 0 < int(number_to_set) <= 100 and int(number_to_set) % 5 == 0:
-            _LOGGER.error("This is were we set the sleep number")
-            # await coordinator.sleepiq.set_sleepnumber(side, number_to_set)
+            _LOGGER.error(
+                f"This is were we set the favorite sleep number to {number_to_set}"
+            )
+            await coordinator.sleepiq.set_favorite_sleepnumber(side, number_to_set)
         else:
-            message = f"Invalid sleep number: {number_to_set}. The new sleep number must be a multiple of 5 between 5 and 100"
-            _LOGGER.error(message)
+            _LOGGER.error(
+                f"Invalid sleep number: {number_to_set}. The new sleep number must be a multiple of 5 between 5 and 100"
+            )
 
     hass.services.async_register(
         DOMAIN,
@@ -120,14 +147,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         schema=SERVICE_SET_FOOT_WARMING_SCHEMA,
     )
 
-    # hass.services.register(DOMAIN, SERVICE_SET_SLEEP_NUMBER, handle_set_sleep_number)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SLEEP_NUMBER,
+        handle_set_sleep_number,
+        schema=SERVICE_SET_NUMBER_SCHEMA,
+    )
 
-    # hass.services.register(
-    #     DOMAIN,
-    #     SERVICE_SET_FAVORITE,
-    #     handle_set_favorite_sleep_number,
-    #     schema=SERVICE_SET_NUMBER_SCHEMA,
-    # )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_FAVORITE,
+        handle_set_favorite_sleep_number,
+        schema=SERVICE_SET_NUMBER_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_LIGHT_BRIGHTNESS,
+        handle_set_light_brightness,
+        schema=SERVICE_SET_NUMBER_SCHEMA,
+    )
 
     return True
 
@@ -146,6 +185,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         _LOGGER.debug("Unloaded entry for %s", username)
+
+    if not hass.data[DOMAIN]:
+        del hass.data[DOMAIN]
 
     return unload_ok
 
@@ -169,25 +211,26 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    # def update_listeners(self) -> None:
-    #     """Call update on all listeners."""
-    #     for update_callback in self._listeners:
-    #         update_callback()
-
     async def _async_update_data(self) -> Bed:
         """Fetch data from API endpoint."""
+        data = None
         try:
             _LOGGER.debug("Fetching data")
             if self.sleepiq._key is None:
                 await self.sleepiq.login()
-            return await self.sleepiq.fetch_homeassistant_data()
+            data = await self.sleepiq.fetch_homeassistant_data()
+            if data is not None:
+                return data
         except Exception as e:
-            message = "SleepIQ failed to login, double check your username and password"
+            message = (
+                f"SleepIQ failed to login, double check your username and password. {e}"
+            )
             _LOGGER.error(message)
-            _LOGGER.error(e)
 
 
 class SleepIQDevice(CoordinatorEntity):
+    """ Represents a base SleepIQ device """
+
     def __init__(
         self,
         coordinator: SleepIQDataUpdateCoordinator,
@@ -198,10 +241,10 @@ class SleepIQDevice(CoordinatorEntity):
 
     @property
     def device_info(self) -> Dict[str, Any]:
-        """Return device information about this Sleep IQ device."""
+        """Return device information about the Sleep IQ device"""
         return {
-            "identifiers": {(DOMAIN, "sleepiq-device")},
-            "name": DEVICE_NAME,
+            "identifiers": {(DOMAIN, self._coordinator.data.bedId)},
+            "name": self._coordinator.data.name,
             "manufacturer": DEVICE_MANUFACTURER,
             "model": self._coordinator.data.model,
             "sw_version": DEVICE_SW_VERSION,

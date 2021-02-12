@@ -5,5 +5,29 @@ set_foot_warming:
       description: The side to change.
       example: "right"
     temperature:
-      description: Choose one of the following temperatures: off, low, medium, high
+      description: Set the temperature. Choose off, low, medium, or high
       example: "high"
+set_favorite_sleep_number:
+  description: Set the favorite Sleep Number for a specific side.
+  fields:
+    side:
+      description: The side to change.
+      example: "right"
+    sleep_number:
+      description: Choose a number to set. It should be between 5 and 100, as a multiple of 5.
+      example: 50
+set_sleep_number:
+  description: Set the Sleep Number for a specific side.
+  fields:
+    side:
+      description: The side to change.
+      example: "right"
+    sleep_number:
+      description: Choose a number to set. It should be between 5 and 100, as a multiple of 5.
+      example: 50
+set_light_brightness:
+  description: Set the brightness for the underbed light.
+  fields:
+    side:
+      description: The brightness of the underbed light. It can be either low, medium, high, or auto.
+      example: "auto"
