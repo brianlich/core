@@ -1,4 +1,6 @@
 """Manage config entries in Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
@@ -526,7 +528,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self, handler_key: Any, *, context: Optional[Dict] = None, data: Any = None
-    ) -> "ConfigFlow":
+    ) -> ConfigFlow:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -890,7 +892,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
@@ -905,7 +907,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self.unique_id is None:
             return
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == self.unique_id:
                 if updates is not None:
                     changed = self.hass.config_entries.async_update_entry(
@@ -949,17 +951,25 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == unique_id:
                 return entry
 
         return None
 
     @callback
-    def _async_current_entries(self) -> List[ConfigEntry]:
-        """Return current entries."""
+    def _async_current_entries(self, include_ignore: bool = False) -> List[ConfigEntry]:
+        """Return current entries.
+
+        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
+        """
         assert self.hass is not None
-        return self.hass.config_entries.async_entries(self.handler)
+        config_entries = self.hass.config_entries.async_entries(self.handler)
+
+        if include_ignore or self.source != SOURCE_USER:
+            return config_entries
+
+        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
@@ -1066,7 +1076,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-    ) -> "OptionsFlow":
+    ) -> OptionsFlow:
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.

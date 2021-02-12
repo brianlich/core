@@ -72,6 +72,7 @@ omit =
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
+    homeassistant/components/aurora/sensor.py
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
@@ -156,7 +157,6 @@ omit =
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
-    homeassistant/components/crimereports/sensor.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*
@@ -563,6 +563,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
+    homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
     homeassistant/components/modbus/sensor.py
     homeassistant/components/modem_callerid/sensor.py
@@ -578,7 +579,20 @@ omit =
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mycroft/notify.py
-    homeassistant/components/mysensors/*
+    homeassistant/components/mysensors/__init__.py
+    homeassistant/components/mysensors/binary_sensor.py
+    homeassistant/components/mysensors/climate.py
+    homeassistant/components/mysensors/const.py
+    homeassistant/components/mysensors/cover.py
+    homeassistant/components/mysensors/device.py
+    homeassistant/components/mysensors/device_tracker.py
+    homeassistant/components/mysensors/gateway.py
+    homeassistant/components/mysensors/handler.py
+    homeassistant/components/mysensors/helpers.py
+    homeassistant/components/mysensors/light.py
+    homeassistant/components/mysensors/notify.py
+    homeassistant/components/mysensors/sensor.py
+    homeassistant/components/mysensors/switch.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
@@ -691,6 +705,7 @@ omit =
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
+    homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
